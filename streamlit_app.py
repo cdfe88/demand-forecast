@@ -25,9 +25,9 @@ with st.container(border=True):
 filter=demand[(demand['store'].isin(sel_stores))&(demand['item']==(sel_items))]
 filter=filter.drop(columns=['store','item'])
 data=filter.groupby('date').agg('sum').reset_index()
-data['cat']=np.where(data['date']<'2026-01-01', 'Historic','Forecast')
+data['Data Type']=np.where(data['date']<'2026-01-01', 'Historic','Forecast')
 data['avg7'] = data['sales'].rolling(window=7).mean()
-data['demand']=np.where(data['cat']=='Forecast',data['avg7'],data['sales'])
+data['demand']=np.where(data['Data Type']=='Forecast',data['avg7'],data['sales'])
 tab1, tab2 = st.tabs(["Demand Forecast", "Reorder Point"])
 
 stock=data[data['date'].dt.date>date.today()].reset_index()
@@ -35,7 +35,7 @@ stock=stock[['date','demand']]
 stock['demand']=stock['demand'].apply(lambda x:math.ceil(x))
 with tab1:
     c1,c2,c3=st.columns(3)
-    st.line_chart(data, x='date', y='demand',color='cat', height=400)
+    st.line_chart(data, x='date', y='demand',color='Data Type', height=400)
 
 with tab2:
     c1,c2,c3=st.columns(3)
@@ -44,7 +44,7 @@ with tab2:
     with c2:
         lead=st.number_input("Lead Time (days)", min_value=1)
     with c3:
-        o_freq=st.number_input("Order Frequency (days)",min_value=1)
+        o_freq=st.number_input("Order Frequency (days)",min_value=1,value=7)
     stock['reorder']=np.where(stock.index % o_freq == 0,True,False)
     stock['receive']=np.where(stock['reorder']==True,stock['date']+timedelta(days=lead),pd.NA)
     stock['receive']=pd.to_datetime(stock['receive'])
